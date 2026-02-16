@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { 
   Upload, Image as ImageIcon, Sparkles, Download, 
-  Maximize2, X, Zap, Loader2, CheckCircle, ArrowRight, Palette, Layers, Info,
+  Maximize2, X, Zap, Loader2, CheckCircle, ArrowRight, Palette, Info,
   RefreshCw, AlertTriangle, Key, ExternalLink
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -10,15 +10,10 @@ import { Language, GeneratedProductImage } from './types';
 import { TRANSLATIONS, STUDIO_COLORS, SINGLE_IMAGE_ANGLES, DUAL_IMAGE_ANGLES } from './constants';
 import { renderProductAngle } from './services/gemini';
 
-// Extend window for aistudio types
+// Robust window extension using the existing AIStudio global type to avoid conflicts with other declarations
 declare global {
-  interface AIStudio {
-    hasSelectedApiKey: () => Promise<boolean>;
-    openSelectKey: () => Promise<void>;
-  }
   interface Window {
-    // Added readonly modifier to match the environment's internal declaration and resolve the modifier conflict error
-    readonly aistudio: AIStudio;
+    aistudio?: AIStudio;
   }
 }
 
@@ -51,7 +46,7 @@ export default function App() {
         setHasPersonalKey(hasKey);
       }
     } catch (e) {
-      console.warn("AI Studio key API not available");
+      console.debug("AI Studio key API not available in this environment");
     }
   };
 
@@ -59,9 +54,10 @@ export default function App() {
     try {
       if (window.aistudio) {
         await window.aistudio.openSelectKey();
-        // Assume success as per instructions to avoid race conditions
         setHasPersonalKey(true);
         setErrorType(null);
+      } else {
+        window.open('https://ai.google.dev/gemini-api/docs/api-key', '_blank');
       }
     } catch (e) {
       console.error("Failed to open key dialog");
@@ -109,25 +105,13 @@ export default function App() {
       }, 100);
     } catch (err: any) {
       console.error("Render Error:", err);
-      
-      // Robust error detection for 429/Quota Exceeded based on the JSON structure provided
-      const status = err.status || (err.error && err.error.code);
       const message = (err.message || (err.error && err.error.message) || "").toLowerCase();
       const errString = JSON.stringify(err).toLowerCase();
 
-      const isQuotaError = 
-        status === 429 || 
-        message.includes("quota") || 
-        message.includes("limit") || 
-        errString.includes("resource_exhausted") ||
-        errString.includes("exhausted") ||
-        errString.includes("429");
-
-      // Handle 'requested entity was not found' by resetting key state and prompting user as per guidelines
       if (message.includes("requested entity was not found")) {
         setHasPersonalKey(false);
         handleOpenKeyDialog();
-      } else if (isQuotaError) {
+      } else if (errString.includes("429") || errString.includes("quota") || errString.includes("exhausted")) {
         setErrorType('quota');
       } else {
         setErrorType('generic');
@@ -170,7 +154,7 @@ export default function App() {
               onClick={handleOpenKeyDialog}
               className={`flex items-center gap-2 px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all border ${hasPersonalKey ? 'bg-green-500/10 border-green-500/20 text-green-500' : 'bg-blue-600 text-white shadow-lg shadow-blue-500/20 hover:scale-105 active:scale-95'}`}
             >
-              <Key size={14} /> {hasPersonalKey ? 'Personal Key Active' : 'Setup Personal Key'}
+              <Key size={14} /> {hasPersonalKey ? 'Key Active' : 'Setup Personal Key'}
             </button>
             <button onClick={() => setLang(lang === 'en' ? 'bn' : 'en')} className="font-black text-xs uppercase tracking-widest opacity-60 hover:opacity-100 px-4 py-2 rounded-lg bg-white/5 transition-all">
               {lang === 'en' ? 'BN' : 'EN'}
@@ -200,7 +184,6 @@ export default function App() {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-5xl mx-auto">
-            {/* Front Image Upload */}
             <div className="space-y-4">
               <p className="text-xs font-black uppercase tracking-widest opacity-40 px-2 flex items-center gap-2">
                 <div className="w-1.5 h-1.5 rounded-full bg-blue-600" /> {t.uploadFront}
@@ -228,7 +211,6 @@ export default function App() {
               </label>
             </div>
 
-            {/* Back Image Upload */}
             <div className="space-y-4">
               <p className="text-xs font-black uppercase tracking-widest opacity-40 px-2 flex items-center gap-2">
                 <div className="w-1.5 h-1.5 rounded-full bg-slate-600" /> {t.uploadBack}
@@ -258,7 +240,6 @@ export default function App() {
           </div>
         </section>
 
-        {/* Step 2: Settings & Action */}
         {sourceImage && !errorType && (
           <motion.section initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="max-w-5xl mx-auto space-y-10">
             <div className="bg-slate-900/40 rounded-[3rem] p-8 md:p-12 border border-white/5 backdrop-blur-sm">
@@ -287,7 +268,6 @@ export default function App() {
                       </button>
                     </div>
                   </div>
-
                   <div className="flex items-start gap-3 p-4 bg-blue-600/5 rounded-2xl border border-blue-600/10">
                     <Info size={18} className="text-blue-500 mt-0.5 shrink-0" />
                     <p className="text-xs opacity-50 leading-relaxed font-medium">
@@ -317,46 +297,31 @@ export default function App() {
           </motion.section>
         )}
 
-        {/* Step 3: Results & Quota Error Section */}
         <section id="results-section" className="space-y-10 min-h-[40vh]">
           <AnimatePresence mode="wait">
             {errorType === 'quota' && (
               <motion.div 
                 key="quota-error"
-                initial={{ opacity: 0, scale: 0.9, y: 20 }} 
-                animate={{ opacity: 1, scale: 1, y: 0 }}
-                exit={{ opacity: 0, scale: 0.9, y: -20 }}
+                initial={{ opacity: 0, scale: 0.9, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.9, y: -20 }}
                 className="max-w-3xl mx-auto p-12 bg-red-500/10 border border-red-500/30 rounded-[3rem] text-center space-y-8 shadow-2xl shadow-red-500/5"
               >
                 <div className="w-24 h-24 bg-red-500/20 rounded-full flex items-center justify-center text-red-500 mx-auto">
                    <AlertTriangle size={48} />
                 </div>
                 <div className="space-y-4">
-                  <h2 className="text-4xl font-black tracking-tight">API Quota Exhausted</h2>
+                  <h2 className="text-4xl font-black tracking-tight">Quota Exhausted</h2>
                   <p className="text-lg opacity-70 font-medium leading-relaxed max-w-xl mx-auto">
-                    The shared application quota for Gemini has been reached. To continue generating professional shots immediately, please setup your own personal API key. 
-                    <br/><span className="text-sm font-bold text-red-400 mt-2 block">It's 100% free and takes less than a minute.</span>
+                    The shared application quota has been reached. Please setup your own personal API key to continue. It's free and takes seconds.
                   </p>
                 </div>
                 <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-4">
-                  <button 
-                    onClick={handleOpenKeyDialog}
-                    className="w-full sm:w-auto px-10 py-5 bg-red-500 text-white rounded-2xl font-black flex items-center justify-center gap-3 shadow-xl shadow-red-500/20 hover:-translate-y-1 active:scale-95 transition-all"
-                  >
+                  <button onClick={handleOpenKeyDialog} className="w-full sm:w-auto px-10 py-5 bg-red-500 text-white rounded-2xl font-black flex items-center justify-center gap-3 shadow-xl shadow-red-500/20 hover:-translate-y-1 active:scale-95 transition-all">
                     <Key size={22} /> Setup Personal API Key
                   </button>
-                  <a 
-                    href="https://ai.google.dev/gemini-api/docs/billing" 
-                    target="_blank" 
-                    rel="noopener noreferrer"
-                    className="w-full sm:w-auto flex items-center justify-center gap-2 px-8 py-5 bg-white/5 hover:bg-white/10 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all"
-                  >
-                    Billing Setup Guide <ExternalLink size={14} />
+                  <a href="https://ai.google.dev/gemini-api/docs/billing" target="_blank" rel="noopener noreferrer" className="w-full sm:w-auto flex items-center justify-center gap-2 px-8 py-5 bg-white/5 hover:bg-white/10 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all">
+                    Billing Guide <ExternalLink size={14} />
                   </a>
                 </div>
-                <button onClick={() => setErrorType(null)} className="text-xs font-bold opacity-30 hover:opacity-100 uppercase tracking-widest underline underline-offset-4">
-                  Dismiss and try again
-                </button>
               </motion.div>
             )}
           </AnimatePresence>
@@ -377,22 +342,18 @@ export default function App() {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
             {isProcessing && !generatedImages.length ? (
               Array.from({ length: 4 }).map((_, i) => (
-                <div key={i} className="aspect-square bg-slate-900 rounded-[3rem] border border-white/5 flex flex-col items-center justify-center p-8 space-y-6 relative overflow-hidden shadow-2xl">
+                <div key={i} className="aspect-square bg-slate-900 rounded-[3rem] border border-white/5 flex flex-col items-center justify-center p-8 space-y-6 relative overflow-hidden">
                   <div className="absolute inset-0 bg-gradient-to-t from-blue-600/10 to-transparent animate-pulse" />
                   <Loader2 className="animate-spin text-blue-600" size={48} />
                   <div className="text-center space-y-1">
                      <p className="font-black text-[10px] uppercase opacity-40 tracking-widest">Rendering Angle {i + 1}</p>
-                     <p className="text-[8px] font-bold opacity-20 uppercase">Optimizing Texture...</p>
                   </div>
                 </div>
               ))
             ) : generatedImages.length && !errorType ? (
               generatedImages.map((img, i) => (
                 <motion.div 
-                  key={img.id}
-                  initial={{ opacity: 0, scale: 0.95 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  transition={{ delay: i * 0.1 }}
+                  key={img.id} initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: i * 0.1 }}
                   className="group relative aspect-square bg-slate-900 rounded-[3rem] border border-white/5 overflow-hidden shadow-2xl hover:border-blue-600/30 transition-all duration-500"
                 >
                   <img src={img.url} className="w-full h-full object-cover" alt={img.angle} />
@@ -419,21 +380,11 @@ export default function App() {
         </section>
       </main>
 
-      {/* Image Modal */}
       <AnimatePresence>
         {activeImage && (
           <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
-            <motion.div 
-              initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} 
-              onClick={() => setActiveImage(null)}
-              className="absolute inset-0 bg-slate-950/95 backdrop-blur-2xl"
-            />
-            <motion.div 
-              initial={{ scale: 0.9, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.9, opacity: 0 }}
-              className="relative w-full max-w-5xl bg-slate-900 rounded-[4rem] overflow-hidden shadow-2xl flex flex-col md:flex-row border border-white/5"
-            >
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setActiveImage(null)} className="absolute inset-0 bg-slate-950/95 backdrop-blur-2xl" />
+            <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }} className="relative w-full max-w-5xl bg-slate-900 rounded-[4rem] overflow-hidden shadow-2xl flex flex-col md:flex-row border border-white/5" >
               <div className="flex-1 bg-black/40 flex items-center justify-center p-6 md:p-12">
                  <img src={activeImage.url} className="max-h-[70vh] w-auto object-contain rounded-2xl shadow-2xl" alt="Preview" />
               </div>
@@ -444,30 +395,16 @@ export default function App() {
                         <p className="text-blue-500 font-black text-xs uppercase tracking-widest">{activeImage.angle}</p>
                         <h3 className="text-4xl font-black tracking-tighter">Studio Quality</h3>
                       </div>
-                      <button onClick={() => setActiveImage(null)} className="p-3 hover:bg-white/5 rounded-2xl transition-colors">
-                        <X size={24} />
-                      </button>
+                      <button onClick={() => setActiveImage(null)} className="p-3 hover:bg-white/5 rounded-2xl transition-colors"> <X size={24} /> </button>
                    </div>
                    <div className="space-y-4">
-                     <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-green-500">
-                        <CheckCircle size={14} /> Ready for E-commerce
-                     </div>
-                     <p className="text-sm opacity-50 font-medium leading-relaxed">
-                       This image has been re-rendered in a professional studio environment. Every detail of your product has been preserved while enhancing lighting, shadows, and background clarity.
-                     </p>
+                     <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-green-500"> <CheckCircle size={14} /> Ready for E-commerce </div>
+                     <p className="text-sm opacity-50 font-medium leading-relaxed"> Professional studio rendering with optimized lighting and perspective. </p>
                    </div>
                 </div>
-
                 <div className="space-y-4 pt-10">
-                   <button 
-                     onClick={() => downloadImage(activeImage.url, activeImage.angle)}
-                     className="w-full py-6 bg-blue-600 text-white rounded-3xl font-black flex items-center justify-center gap-3 shadow-xl shadow-blue-500/20 hover:-translate-y-1 transition-all"
-                   >
-                     <Download size={22} /> {t.downloadBtn}
-                   </button>
-                   <button onClick={() => setActiveImage(null)} className="w-full py-4 bg-white/5 hover:bg-white/10 rounded-2xl font-black text-xs uppercase tracking-widest transition-colors">
-                     Back to Studio
-                   </button>
+                   <button onClick={() => downloadImage(activeImage.url, activeImage.angle)} className="w-full py-6 bg-blue-600 text-white rounded-3xl font-black flex items-center justify-center gap-3 shadow-xl shadow-blue-500/20 hover:-translate-y-1 transition-all" > <Download size={22} /> {t.downloadBtn} </button>
+                   <button onClick={() => setActiveImage(null)} className="w-full py-4 bg-white/5 hover:bg-white/10 rounded-2xl font-black text-xs uppercase tracking-widest transition-colors"> Back to Studio </button>
                 </div>
               </div>
             </motion.div>
@@ -475,13 +412,12 @@ export default function App() {
         )}
       </AnimatePresence>
 
-      {/* Footer */}
       <footer className="py-24 px-6 border-t border-white/5 text-center mt-20">
          <div className="max-w-7xl mx-auto space-y-6">
             <div className="flex items-center justify-center gap-3 font-black text-2xl opacity-20 grayscale hover:opacity-100 hover:grayscale-0 transition-all cursor-pointer" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>
                <Zap size={24} fill="currentColor" className="text-blue-600" /> easyProduct AI
             </div>
-            <p className="text-[10px] font-black opacity-30 uppercase tracking-[0.4em]">easyproduct.ai • developed by Tasin Abrar • 2026</p>
+            <p className="text-[10px] font-black opacity-30 uppercase tracking-[0.4em]">easyproduct.ai • 2026</p>
          </div>
       </footer>
     </div>
