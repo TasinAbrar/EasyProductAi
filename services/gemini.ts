@@ -7,17 +7,20 @@ export const renderProductAngle = async (
   bgColor: string, 
   isTransparent: boolean
 ): Promise<string> => {
-  // Always create a new instance right before use to pick up the most up-to-date API key
-  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+  // Obtain API key exclusively from the environment
+  const apiKey = process.env.API_KEY;
+  if (!apiKey) {
+    throw new Error("Studio configuration missing: API Key not found.");
+  }
+
+  const ai = new GoogleGenAI({ apiKey });
   
-  // Detect MIME type from base64 string
-  const mimeTypeMatch = base64Image.match(/^data:([^;]+);base64,/);
-  const mimeType = mimeTypeMatch ? mimeTypeMatch[1] : 'image/png';
-  const data = base64Image.split(',')[1] || base64Image;
+  // Extract clean base64 data
+  const data = base64Image.includes(',') ? base64Image.split(',')[1] : base64Image;
 
   const bgInstruction = isTransparent 
-    ? "Place the product on a pure, solid, clean white background (hex #FFFFFF) with no shadows on the background itself, only soft contact shadows under the product." 
-    : `Place the product on a solid background with hex color ${bgColor}.`;
+    ? "Place the subject on a pure solid white background (#FFFFFF) with no shadows on the background itself, only soft contact shadows underneath the subject." 
+    : `Place the subject on a solid background with hex color ${bgColor}.`;
 
   try {
     const response = await ai.models.generateContent({
@@ -27,24 +30,23 @@ export const renderProductAngle = async (
           {
             inlineData: {
               data: data,
-              mimeType: mimeType
+              mimeType: 'image/png'
             }
           },
           {
-            text: `Professional E-commerce Photography Studio Task:
+            text: `Professional Studio Rendering Task:
             
-            Action: Re-render the product in this specific angle: ${anglePrompt}.
+            Requested Angle: ${anglePrompt}.
             
-            Background: ${bgInstruction}
+            Background Style: ${bgInstruction}
             
             Requirements:
-            - MAINTAIN CONSISTENCY: The product's shape, colors, textures, labels, and overall identity must remain identical to the original image.
-            - LIGHTING: Use professional studio three-point lighting (softbox style) to highlight the product features.
-            - QUALITY: High-resolution, sharp focus, professional depth of field.
-            - CLEANLINESS: Zero clutter. No other objects, hands, or props. Just the product.
-            - ORIENTATION: Center the product perfectly in the frame.
+            - MAINTAIN EXACT IDENTITY: The primary subject must retain its exact shape, colors, textures, and details from the source image.
+            - LIGHTING: Apply professional studio softbox lighting to emphasize form and texture.
+            - QUALITY: Result must be high-resolution, sharp, and look like a professional DSLR shot.
+            - SCENE: No extra objects, hands, or background clutter. Just the subject in the clean studio environment.
             
-            Output: Generate a high-quality studio-shot version of the product provided.`
+            Output: High-fidelity image rendering.`
           }
         ]
       },
@@ -60,15 +62,9 @@ export const renderProductAngle = async (
       return `data:image/png;base64,${part.inlineData.data}`;
     }
     
-    // Check for text-only response which might contain error descriptions
-    const textPart = response.candidates?.[0]?.content?.parts.find(p => p.text);
-    if (textPart?.text) {
-      console.error("Model returned text instead of image:", textPart.text);
-    }
-    
-    throw new Error("No image data returned from studio engine. The model might be blocking the content or failing to render.");
+    throw new Error("The digital studio engine failed to return image data. This may be due to content filtering.");
   } catch (error) {
-    console.error("Critical Generation Error:", error);
+    console.error("Studio Rendering Error:", error);
     throw error;
   }
 };

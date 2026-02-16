@@ -3,9 +3,9 @@ import { TranslationStrings } from './types';
 
 export const TRANSLATIONS: Record<'en' | 'bn', TranslationStrings> = {
   en: {
-    appTitle: "easyProduct",
-    heroTitle: "Professional Product Photos in Seconds",
-    heroSub: "Upload your product photos. Get 4 clean, studio-quality images from different angles instantly.",
+    appTitle: "easySocial",
+    heroTitle: "Professional Studio Photos in Seconds",
+    heroSub: "Upload your raw photos. Get 4 clean, studio-quality images from different angles instantly.",
     uploadFront: "Front View (Required)",
     uploadBack: "Back View (Optional)",
     uploadOptional: "Optional",
@@ -24,9 +24,9 @@ export const TRANSLATIONS: Record<'en' | 'bn', TranslationStrings> = {
     transparentLabel: "Transparent / Pure White"
   },
   bn: {
-    appTitle: "easyProduct",
-    heroTitle: "সেকেন্ডে প্রফেশনাল প্রোডাক্ট ফটো",
-    heroSub: "আপনার প্রোডাক্টের ছবি আপলোড করুন। ৪টি পরিষ্কার, স্টুডিও-কোয়ালিটি ছবি তৈরি হবে মুহূর্তেই।",
+    appTitle: "easySocial",
+    heroTitle: "সেকেন্ডে প্রফেশনাল স্টুডিও ফটো",
+    heroSub: "আপনার ছবি আপলোড করুন। ৪টি পরিষ্কার, স্টুডিও-কোয়ালিটি ছবি তৈরি হবে মুহূর্তেই।",
     uploadFront: "সামনের দৃশ্য (আবশ্যক)",
     uploadBack: "পেছনের দৃশ্য (ঐচ্ছিক)",
     uploadOptional: "ঐচ্ছিক",

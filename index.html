@@ -4,8 +4,8 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>easyProduct - Professional Studio Shots</title>
-    <meta name="description" content="Turn any product photo into high-end studio shots instantly." />
+    <title>easySocial - Professional Studio Shots</title>
+    <meta name="description" content="Turn any photo into a professional studio shot instantly." />
     
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -38,6 +38,11 @@
         to { transform: rotate(360deg); }
       }
     </style>
+
+    <script>
+      // Safe shim for process.env to prevent ReferenceErrors in browser
+      window.process = window.process || { env: {} };
+    </script>
 
     <script type="importmap">
     {

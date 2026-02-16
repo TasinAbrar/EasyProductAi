@@ -1,9 +1,9 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { 
-  Upload, Image as ImageIcon, Sparkles, Download, 
+  Upload, Image as ImageIcon, Download, 
   Maximize2, X, Zap, Loader2, CheckCircle, ArrowRight, Palette, Info,
-  RefreshCw, AlertTriangle, Mail, ExternalLink
+  RefreshCw, AlertTriangle, Mail
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Language, GeneratedProductImage } from './types';
@@ -69,12 +69,12 @@ export default function App() {
       }, 300);
     } catch (err: any) {
       console.error("Render Error:", err);
-      const errString = JSON.stringify(err).toLowerCase();
       const message = (err.message || "").toLowerCase();
+      const errString = JSON.stringify(err).toLowerCase();
 
       if (errString.includes("429") || errString.includes("quota") || message.includes("quota")) {
         setErrorType('quota');
-      } else if (errString.includes("401") || errString.includes("403") || message.includes("auth") || message.includes("key")) {
+      } else if (errString.includes("401") || errString.includes("403") || message.includes("auth") || message.includes("key") || message.includes("not found")) {
         setErrorType('auth');
       } else {
         setErrorType('generic');
@@ -95,7 +95,7 @@ export default function App() {
   const downloadImage = (url: string, name: string) => {
     const link = document.createElement('a');
     link.href = url;
-    link.download = `easyProduct-${name.toLowerCase().replace(/\s+/g, '-')}.png`;
+    link.download = `easySocial-${name.toLowerCase().replace(/\s+/g, '-')}.png`;
     link.click();
   };
 
@@ -113,7 +113,7 @@ export default function App() {
             <div className="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center text-white shadow-xl shadow-blue-500/20">
               <Zap size={22} fill="currentColor" />
             </div>
-            <span>easyProduct</span>
+            <span>easySocial</span>
           </div>
           
           <div className="flex items-center gap-4">
@@ -269,19 +269,19 @@ export default function App() {
                 </div>
                 <div className="space-y-4">
                   <h2 className="text-4xl font-black tracking-tight">
-                    {errorType === 'quota' ? 'Service Limit Reached' : errorType === 'auth' ? 'Configuration Error' : 'Unexpected Error'}
+                    {errorType === 'quota' ? 'Limit Reached' : errorType === 'auth' ? 'Configuration Issue' : 'Studio Error'}
                   </h2>
                   <p className="text-lg opacity-70 font-medium leading-relaxed max-w-xl mx-auto">
                     {errorType === 'quota' 
-                      ? 'The shared application quota has been exhausted. Please contact the developer for support or try again later.' 
+                      ? 'The shared studio quota has been exhausted. Please contact the developer for support or try again later.' 
                       : errorType === 'auth'
-                      ? 'There seems to be an issue with the developer API key configuration. Please report this to the developer.'
-                      : 'An unexpected error occurred while generating your studio shots. Please try again or contact support.'}
+                      ? 'The developer needs to verify the studio configuration. Please report this error using the button below.'
+                      : 'An unexpected error occurred while processing your images. Please try again or contact the developer.'}
                   </p>
                 </div>
                 <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-4">
                   <button onClick={handleContactDeveloper} className="w-full sm:w-auto px-10 py-5 bg-red-500 text-white rounded-2xl font-black flex items-center justify-center gap-3 shadow-xl shadow-red-500/20 hover:-translate-y-1 active:scale-95 transition-all">
-                    <Mail size={22} /> Contact Developer
+                    <Mail size={22} /> Contact the Developer
                   </button>
                 </div>
               </motion.div>
@@ -308,7 +308,7 @@ export default function App() {
                   <div className="absolute inset-0 bg-gradient-to-t from-blue-600/10 to-transparent animate-pulse" />
                   <Loader2 className="animate-spin text-blue-600" size={48} />
                   <div className="text-center space-y-1">
-                     <p className="font-black text-[10px] uppercase opacity-40 tracking-widest">Generating Angle {i + 1}</p>
+                     <p className="font-black text-[10px] uppercase opacity-40 tracking-widest">Rendering Angle {i + 1}</p>
                   </div>
                 </div>
               ))
@@ -335,7 +335,7 @@ export default function App() {
             ) : sourceImage && !isProcessing && !errorType && (
               <div className="col-span-full py-20 text-center opacity-20 space-y-4">
                  <ImageIcon size={64} className="mx-auto" />
-                 <p className="font-black uppercase tracking-[0.3em] text-xs">Awaiting Generation</p>
+                 <p className="font-black uppercase tracking-[0.3em] text-xs">Ready for Studio Render</p>
               </div>
             )}
           </div>
@@ -360,8 +360,8 @@ export default function App() {
                       <button onClick={() => setActiveImage(null)} className="p-3 hover:bg-white/5 rounded-2xl transition-colors"> <X size={24} /> </button>
                    </div>
                    <div className="space-y-4">
-                     <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-green-500"> <CheckCircle size={14} /> Ready for E-commerce </div>
-                     <p className="text-sm opacity-50 font-medium leading-relaxed"> Professional studio rendering with optimized lighting and perspective. </p>
+                     <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-green-500"> <CheckCircle size={14} /> Ready for Production </div>
+                     <p className="text-sm opacity-50 font-medium leading-relaxed"> Professional studio rendering with optimized lighting and perspective for social media and marketing. </p>
                    </div>
                 </div>
                 <div className="space-y-4 pt-10">
@@ -377,10 +377,10 @@ export default function App() {
       <footer className="py-24 px-6 border-t border-white/5 text-center mt-20">
          <div className="max-w-7xl mx-auto space-y-6">
             <div className="flex items-center justify-center gap-3 font-black text-2xl opacity-20 grayscale hover:opacity-100 hover:grayscale-0 transition-all cursor-pointer" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>
-               <Zap size={24} fill="currentColor" className="text-blue-600" /> easyProduct
+               <Zap size={24} fill="currentColor" className="text-blue-600" /> easySocial
             </div>
             <div className="space-y-2">
-              <p className="text-[10px] font-black opacity-30 uppercase tracking-[0.4em]">easyproduct.shop • 2026</p>
+              <p className="text-[10px] font-black opacity-30 uppercase tracking-[0.4em]">easysocial.shop • 2026</p>
               <p className="text-[11px] font-bold opacity-40 uppercase tracking-[0.2em] text-blue-400">Developed by Tasin Abrar</p>
             </div>
          </div>
