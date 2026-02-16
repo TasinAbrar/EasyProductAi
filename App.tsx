@@ -42,13 +42,6 @@ export default function App() {
   const generateShots = async () => {
     if (!sourceImage) return;
     
-    // Simple check for API key
-    if (!process.env.API_KEY || process.env.API_KEY === '') {
-      console.error("API Key is missing or empty.");
-      setErrorType('auth');
-      return;
-    }
-
     setIsProcessing(true);
     setGeneratedImages([]);
     setErrorType(null);
@@ -282,7 +275,7 @@ export default function App() {
                     {errorType === 'quota' 
                       ? 'The shared application quota has been exhausted. Please contact the developer for support or try again later.' 
                       : errorType === 'auth'
-                      ? 'There seems to be an issue with the developer API key. Please report this to the developer.'
+                      ? 'There seems to be an issue with the developer API key configuration. Please report this to the developer.'
                       : 'An unexpected error occurred while generating your studio shots. Please try again or contact support.'}
                   </p>
                 </div>
