@@ -7,15 +7,10 @@ export const renderProductAngle = async (
   bgColor: string, 
   isTransparent: boolean
 ): Promise<string> => {
-  // Obtain API key exclusively from the environment
-  const apiKey = process.env.API_KEY;
-  if (!apiKey) {
-    throw new Error("Studio configuration missing: API Key not found.");
-  }
-
-  const ai = new GoogleGenAI({ apiKey });
+  // Use gemini-2.5-flash-image as it is the standard model for image generation tasks
+  // and has broader access permissions than preview models.
+  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
   
-  // Extract clean base64 data
   const data = base64Image.includes(',') ? base64Image.split(',')[1] : base64Image;
 
   const bgInstruction = isTransparent 
@@ -34,19 +29,19 @@ export const renderProductAngle = async (
             }
           },
           {
-            text: `Professional Studio Rendering Task:
+            text: `Professional Studio Photography Rendering:
             
-            Requested Angle: ${anglePrompt}.
+            Action: Re-render this product/subject from the following perspective: ${anglePrompt}.
             
-            Background Style: ${bgInstruction}
+            Background: ${bgInstruction}
             
-            Requirements:
-            - MAINTAIN EXACT IDENTITY: The primary subject must retain its exact shape, colors, textures, and details from the source image.
-            - LIGHTING: Apply professional studio softbox lighting to emphasize form and texture.
-            - QUALITY: Result must be high-resolution, sharp, and look like a professional DSLR shot.
-            - SCENE: No extra objects, hands, or background clutter. Just the subject in the clean studio environment.
+            Strict Quality Requirements:
+            1. IDENTITY: The subject must remain exactly the same as the original (color, shape, text, labels).
+            2. LIGHTING: Use professional studio three-point lighting (softbox style).
+            3. CLEANLINESS: Solid, clean background. No hands, no props, no clutter.
+            4. QUALITY: Sharp focus, high resolution, realistic textures.
             
-            Output: High-fidelity image rendering.`
+            Output: A high-end studio-quality image.`
           }
         ]
       },
@@ -57,14 +52,16 @@ export const renderProductAngle = async (
       }
     });
 
+    // The output response may contain both image and text parts.
+    // We iterate to find the image part.
     const part = response.candidates?.[0]?.content?.parts.find(p => p.inlineData);
     if (part?.inlineData) {
       return `data:image/png;base64,${part.inlineData.data}`;
     }
     
-    throw new Error("The digital studio engine failed to return image data. This may be due to content filtering.");
+    throw new Error("The rendering engine did not return an image. It might be due to safety filters or a temporary service issue.");
   } catch (error) {
-    console.error("Studio Rendering Error:", error);
+    console.error("Rendering Error:", error);
     throw error;
   }
 };

@@ -20,6 +20,7 @@ export default function App() {
   
   // Error States
   const [errorType, setErrorType] = useState<'quota' | 'generic' | 'auth' | null>(null);
+  const [errorMessage, setErrorMessage] = useState<string>('');
 
   // Studio Settings
   const [selectedBg, setSelectedBg] = useState(STUDIO_COLORS[0].value);
@@ -45,6 +46,7 @@ export default function App() {
     setIsProcessing(true);
     setGeneratedImages([]);
     setErrorType(null);
+    setErrorMessage('');
 
     try {
       const anglesToRender = backImage ? DUAL_IMAGE_ANGLES : SINGLE_IMAGE_ANGLES;
@@ -74,10 +76,15 @@ export default function App() {
 
       if (errString.includes("429") || errString.includes("quota") || message.includes("quota")) {
         setErrorType('quota');
-      } else if (errString.includes("401") || errString.includes("403") || message.includes("auth") || message.includes("key") || message.includes("not found")) {
+      } else if (errString.includes("403") || message.includes("permission") || message.includes("not authorized")) {
         setErrorType('auth');
+        setErrorMessage("Permission Denied: Your API Key might not have billing enabled or doesn't have access to the Gemini Image model. Please check your Google AI Studio settings.");
+      } else if (errString.includes("401") || message.includes("key")) {
+        setErrorType('auth');
+        setErrorMessage("Invalid API Key: The provided key is not valid.");
       } else {
         setErrorType('generic');
+        setErrorMessage(err.message || "An unexpected error occurred during rendering.");
       }
     } finally {
       setIsProcessing(false);
@@ -90,6 +97,7 @@ export default function App() {
     setGeneratedImages([]);
     setIsProcessing(false);
     setErrorType(null);
+    setErrorMessage('');
   };
 
   const downloadImage = (url: string, name: string) => {
@@ -247,7 +255,7 @@ export default function App() {
                      </button>
                    ) : (
                      <div className="w-full py-8 bg-slate-800 rounded-[2.5rem] flex items-center justify-center gap-4 text-blue-500 font-black text-2xl cursor-not-allowed">
-                       <Loader2 className="animate-spin" size={32} /> GENERATING...
+                       <Loader2 className="animate-spin" size={32} /> RENDERING...
                      </div>
                    )}
                 </div>
@@ -269,19 +277,18 @@ export default function App() {
                 </div>
                 <div className="space-y-4">
                   <h2 className="text-4xl font-black tracking-tight">
-                    {errorType === 'quota' ? 'Limit Reached' : errorType === 'auth' ? 'Configuration Issue' : 'Studio Error'}
+                    {errorType === 'quota' ? 'Limit Reached' : errorType === 'auth' ? 'Permission Error' : 'Studio Error'}
                   </h2>
                   <p className="text-lg opacity-70 font-medium leading-relaxed max-w-xl mx-auto">
-                    {errorType === 'quota' 
-                      ? 'The shared studio quota has been exhausted. Please contact the developer for support or try again later.' 
-                      : errorType === 'auth'
-                      ? 'The developer needs to verify the studio configuration. Please report this error using the button below.'
-                      : 'An unexpected error occurred while processing your images. Please try again or contact the developer.'}
+                    {errorMessage || 'An unexpected error occurred while processing your images. Please try again or contact the developer.'}
                   </p>
                 </div>
                 <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-4">
                   <button onClick={handleContactDeveloper} className="w-full sm:w-auto px-10 py-5 bg-red-500 text-white rounded-2xl font-black flex items-center justify-center gap-3 shadow-xl shadow-red-500/20 hover:-translate-y-1 active:scale-95 transition-all">
-                    <Mail size={22} /> Contact the Developer
+                    <Mail size={22} /> Contact Tasin Abrar
+                  </button>
+                  <button onClick={reset} className="w-full sm:w-auto px-10 py-5 bg-white/10 text-white rounded-2xl font-black flex items-center justify-center gap-3 hover:bg-white/20 transition-all">
+                    Try Again
                   </button>
                 </div>
               </motion.div>
@@ -360,8 +367,8 @@ export default function App() {
                       <button onClick={() => setActiveImage(null)} className="p-3 hover:bg-white/5 rounded-2xl transition-colors"> <X size={24} /> </button>
                    </div>
                    <div className="space-y-4">
-                     <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-green-500"> <CheckCircle size={14} /> Ready for Production </div>
-                     <p className="text-sm opacity-50 font-medium leading-relaxed"> Professional studio rendering with optimized lighting and perspective for social media and marketing. </p>
+                     <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-green-500"> <CheckCircle size={14} /> Ready for Social Media </div>
+                     <p className="text-sm opacity-50 font-medium leading-relaxed"> Professional studio rendering with optimized lighting and perspective for high-end marketing. </p>
                    </div>
                 </div>
                 <div className="space-y-4 pt-10">
