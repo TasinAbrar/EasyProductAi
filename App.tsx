@@ -19,7 +19,7 @@ export default function App() {
   const [activeImage, setActiveImage] = useState<GeneratedProductImage | null>(null);
   
   // Error States
-  const [errorType, setErrorType] = useState<'quota' | 'generic' | null>(null);
+  const [errorType, setErrorType] = useState<'quota' | 'generic' | 'auth' | null>(null);
 
   // Studio Settings
   const [selectedBg, setSelectedBg] = useState(STUDIO_COLORS[0].value);
@@ -41,6 +41,14 @@ export default function App() {
 
   const generateShots = async () => {
     if (!sourceImage) return;
+    
+    // Simple check for API key
+    if (!process.env.API_KEY || process.env.API_KEY === '') {
+      console.error("API Key is missing or empty.");
+      setErrorType('auth');
+      return;
+    }
+
     setIsProcessing(true);
     setGeneratedImages([]);
     setErrorType(null);
@@ -65,14 +73,16 @@ export default function App() {
       
       setTimeout(() => {
         document.getElementById('results-section')?.scrollIntoView({ behavior: 'smooth' });
-      }, 100);
+      }, 300);
     } catch (err: any) {
       console.error("Render Error:", err);
-      const message = (err.message || (err.error && err.error.message) || "").toLowerCase();
       const errString = JSON.stringify(err).toLowerCase();
+      const message = (err.message || "").toLowerCase();
 
-      if (errString.includes("429") || errString.includes("quota") || errString.includes("exhausted")) {
+      if (errString.includes("429") || errString.includes("quota") || message.includes("quota")) {
         setErrorType('quota');
+      } else if (errString.includes("401") || errString.includes("403") || message.includes("auth") || message.includes("key")) {
+        setErrorType('auth');
       } else {
         setErrorType('generic');
       }
@@ -255,9 +265,9 @@ export default function App() {
 
         <section id="results-section" className="space-y-10 min-h-[40vh]">
           <AnimatePresence mode="wait">
-            {errorType === 'quota' && (
+            {errorType && (
               <motion.div 
-                key="quota-error"
+                key="error-box"
                 initial={{ opacity: 0, scale: 0.9, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.9, y: -20 }}
                 className="max-w-3xl mx-auto p-12 bg-red-500/10 border border-red-500/30 rounded-[3rem] text-center space-y-8 shadow-2xl shadow-red-500/5"
               >
@@ -265,9 +275,15 @@ export default function App() {
                    <AlertTriangle size={48} />
                 </div>
                 <div className="space-y-4">
-                  <h2 className="text-4xl font-black tracking-tight">Service Limit Reached</h2>
+                  <h2 className="text-4xl font-black tracking-tight">
+                    {errorType === 'quota' ? 'Service Limit Reached' : errorType === 'auth' ? 'Configuration Error' : 'Unexpected Error'}
+                  </h2>
                   <p className="text-lg opacity-70 font-medium leading-relaxed max-w-xl mx-auto">
-                    The shared application quota has been exhausted. Please contact the developer for support or try again later.
+                    {errorType === 'quota' 
+                      ? 'The shared application quota has been exhausted. Please contact the developer for support or try again later.' 
+                      : errorType === 'auth'
+                      ? 'There seems to be an issue with the developer API key. Please report this to the developer.'
+                      : 'An unexpected error occurred while generating your studio shots. Please try again or contact support.'}
                   </p>
                 </div>
                 <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-4">

@@ -7,14 +7,11 @@
     <title>easyProduct - Professional Studio Shots</title>
     <meta name="description" content="Turn any product photo into high-end studio shots instantly." />
     
-    <!-- Critical: Shim process.env for browser compatibility to prevent 'ReferenceError: process is not defined' -->
+    <!-- Critical: Shim process.env for browser compatibility but DO NOT overwrite API_KEY if provided by environment -->
     <script>
-      window.process = { 
-        env: { 
-          NODE_ENV: 'production',
-          API_KEY: '' 
-        } 
-      };
+      window.process = window.process || {};
+      window.process.env = window.process.env || {};
+      window.process.env.NODE_ENV = window.process.env.NODE_ENV || 'production';
     </script>
 
     <script src="https://cdn.tailwindcss.com"></script>
