@@ -3,19 +3,12 @@ import React, { useState, useEffect } from 'react';
 import { 
   Upload, Image as ImageIcon, Sparkles, Download, 
   Maximize2, X, Zap, Loader2, CheckCircle, ArrowRight, Palette, Info,
-  RefreshCw, AlertTriangle, Key, ExternalLink
+  RefreshCw, AlertTriangle, Mail, ExternalLink
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Language, GeneratedProductImage } from './types';
 import { TRANSLATIONS, STUDIO_COLORS, SINGLE_IMAGE_ANGLES, DUAL_IMAGE_ANGLES } from './constants';
 import { renderProductAngle } from './services/gemini';
-
-// Robust window extension using the existing AIStudio global type to avoid conflicts with other declarations
-declare global {
-  interface Window {
-    aistudio?: AIStudio;
-  }
-}
 
 export default function App() {
   const [lang, setLang] = useState<Language>('en');
@@ -27,42 +20,12 @@ export default function App() {
   
   // Error States
   const [errorType, setErrorType] = useState<'quota' | 'generic' | null>(null);
-  const [hasPersonalKey, setHasPersonalKey] = useState(false);
 
   // Studio Settings
   const [selectedBg, setSelectedBg] = useState(STUDIO_COLORS[0].value);
   const [isTransparent, setIsTransparent] = useState(false);
 
   const t = TRANSLATIONS[lang];
-
-  useEffect(() => {
-    checkKeyStatus();
-  }, []);
-
-  const checkKeyStatus = async () => {
-    try {
-      if (window.aistudio) {
-        const hasKey = await window.aistudio.hasSelectedApiKey();
-        setHasPersonalKey(hasKey);
-      }
-    } catch (e) {
-      console.debug("AI Studio key API not available in this environment");
-    }
-  };
-
-  const handleOpenKeyDialog = async () => {
-    try {
-      if (window.aistudio) {
-        await window.aistudio.openSelectKey();
-        setHasPersonalKey(true);
-        setErrorType(null);
-      } else {
-        window.open('https://ai.google.dev/gemini-api/docs/api-key', '_blank');
-      }
-    } catch (e) {
-      console.error("Failed to open key dialog");
-    }
-  };
 
   const handleUpload = (e: React.ChangeEvent<HTMLInputElement>, type: 'front' | 'back') => {
     const file = e.target.files?.[0];
@@ -108,10 +71,7 @@ export default function App() {
       const message = (err.message || (err.error && err.error.message) || "").toLowerCase();
       const errString = JSON.stringify(err).toLowerCase();
 
-      if (message.includes("requested entity was not found")) {
-        setHasPersonalKey(false);
-        handleOpenKeyDialog();
-      } else if (errString.includes("429") || errString.includes("quota") || errString.includes("exhausted")) {
+      if (errString.includes("429") || errString.includes("quota") || errString.includes("exhausted")) {
         setErrorType('quota');
       } else {
         setErrorType('generic');
@@ -136,6 +96,10 @@ export default function App() {
     link.click();
   };
 
+  const handleContactDeveloper = () => {
+    window.location.href = "mailto:tasinabrar01@gmail.com";
+  };
+
   return (
     <div className="min-h-screen bg-slate-950 text-white transition-all duration-700 font-sans">
       
@@ -146,15 +110,15 @@ export default function App() {
             <div className="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center text-white shadow-xl shadow-blue-500/20">
               <Zap size={22} fill="currentColor" />
             </div>
-            <span>easyProduct<span className="text-blue-600"> AI</span></span>
+            <span>easyProduct</span>
           </div>
           
           <div className="flex items-center gap-4">
             <button 
-              onClick={handleOpenKeyDialog}
-              className={`flex items-center gap-2 px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all border ${hasPersonalKey ? 'bg-green-500/10 border-green-500/20 text-green-500' : 'bg-blue-600 text-white shadow-lg shadow-blue-500/20 hover:scale-105 active:scale-95'}`}
+              onClick={handleContactDeveloper}
+              className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all bg-white/5 border border-white/10 hover:bg-white/10 hover:scale-105 active:scale-95"
             >
-              <Key size={14} /> {hasPersonalKey ? 'Key Active' : 'Setup Personal Key'}
+              <Mail size={14} /> Contact the Developer
             </button>
             <button onClick={() => setLang(lang === 'en' ? 'bn' : 'en')} className="font-black text-xs uppercase tracking-widest opacity-60 hover:opacity-100 px-4 py-2 rounded-lg bg-white/5 transition-all">
               {lang === 'en' ? 'BN' : 'EN'}
@@ -169,17 +133,9 @@ export default function App() {
         {/* Step 1: Upload Section */}
         <section className="space-y-12">
           <div className="text-center max-w-3xl mx-auto space-y-6">
-            <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-blue-600/10 text-blue-500 text-[10px] font-black uppercase tracking-widest border border-blue-600/20">
-              <Sparkles size={14} /> AI Product Studio v2.3
-            </motion.div>
             <h1 className="text-5xl md:text-7xl font-black tracking-tighter leading-[0.9]">
               Professional Photos <br/><span className="text-blue-600">From Any Angle.</span>
             </h1>
-            {!hasPersonalKey && !errorType && (
-              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 1 }} className="flex items-center justify-center gap-2 text-sm text-blue-400 font-bold bg-blue-500/5 py-2 px-4 rounded-full border border-blue-500/10 max-w-fit mx-auto">
-                <Info size={14} /> Tip: Use your own key to bypass shared limits.
-              </motion.div>
-            )}
             <p className="text-lg opacity-50 font-medium">{t.heroSub}</p>
           </div>
 
@@ -272,8 +228,8 @@ export default function App() {
                     <Info size={18} className="text-blue-500 mt-0.5 shrink-0" />
                     <p className="text-xs opacity-50 leading-relaxed font-medium">
                       {backImage 
-                        ? "Both views detected. AI will generate 2 front angles and 2 back angles for a complete 360-degree set." 
-                        : "Single view detected. AI will generate 4 professional perspectives using the front image."}
+                        ? "Both views detected. Generating 2 front angles and 2 back angles for a complete 360-degree set." 
+                        : "Single view detected. Generating 4 professional perspectives using the front image."}
                     </p>
                   </div>
                 </div>
@@ -288,7 +244,7 @@ export default function App() {
                      </button>
                    ) : (
                      <div className="w-full py-8 bg-slate-800 rounded-[2.5rem] flex items-center justify-center gap-4 text-blue-500 font-black text-2xl cursor-not-allowed">
-                       <Loader2 className="animate-spin" size={32} /> RENDERING...
+                       <Loader2 className="animate-spin" size={32} /> GENERATING...
                      </div>
                    )}
                 </div>
@@ -309,18 +265,15 @@ export default function App() {
                    <AlertTriangle size={48} />
                 </div>
                 <div className="space-y-4">
-                  <h2 className="text-4xl font-black tracking-tight">Quota Exhausted</h2>
+                  <h2 className="text-4xl font-black tracking-tight">Service Limit Reached</h2>
                   <p className="text-lg opacity-70 font-medium leading-relaxed max-w-xl mx-auto">
-                    The shared application quota has been reached. Please setup your own personal API key to continue. It's free and takes seconds.
+                    The shared application quota has been exhausted. Please contact the developer for support or try again later.
                   </p>
                 </div>
                 <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-4">
-                  <button onClick={handleOpenKeyDialog} className="w-full sm:w-auto px-10 py-5 bg-red-500 text-white rounded-2xl font-black flex items-center justify-center gap-3 shadow-xl shadow-red-500/20 hover:-translate-y-1 active:scale-95 transition-all">
-                    <Key size={22} /> Setup Personal API Key
+                  <button onClick={handleContactDeveloper} className="w-full sm:w-auto px-10 py-5 bg-red-500 text-white rounded-2xl font-black flex items-center justify-center gap-3 shadow-xl shadow-red-500/20 hover:-translate-y-1 active:scale-95 transition-all">
+                    <Mail size={22} /> Contact Developer
                   </button>
-                  <a href="https://ai.google.dev/gemini-api/docs/billing" target="_blank" rel="noopener noreferrer" className="w-full sm:w-auto flex items-center justify-center gap-2 px-8 py-5 bg-white/5 hover:bg-white/10 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all">
-                    Billing Guide <ExternalLink size={14} />
-                  </a>
                 </div>
               </motion.div>
             )}
@@ -346,7 +299,7 @@ export default function App() {
                   <div className="absolute inset-0 bg-gradient-to-t from-blue-600/10 to-transparent animate-pulse" />
                   <Loader2 className="animate-spin text-blue-600" size={48} />
                   <div className="text-center space-y-1">
-                     <p className="font-black text-[10px] uppercase opacity-40 tracking-widest">Rendering Angle {i + 1}</p>
+                     <p className="font-black text-[10px] uppercase opacity-40 tracking-widest">Generating Angle {i + 1}</p>
                   </div>
                 </div>
               ))
@@ -415,9 +368,12 @@ export default function App() {
       <footer className="py-24 px-6 border-t border-white/5 text-center mt-20">
          <div className="max-w-7xl mx-auto space-y-6">
             <div className="flex items-center justify-center gap-3 font-black text-2xl opacity-20 grayscale hover:opacity-100 hover:grayscale-0 transition-all cursor-pointer" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>
-               <Zap size={24} fill="currentColor" className="text-blue-600" /> easyProduct AI
+               <Zap size={24} fill="currentColor" className="text-blue-600" /> easyProduct
             </div>
-            <p className="text-[10px] font-black opacity-30 uppercase tracking-[0.4em]">easyproduct.ai • 2026</p>
+            <div className="space-y-2">
+              <p className="text-[10px] font-black opacity-30 uppercase tracking-[0.4em]">easyproduct.shop • 2026</p>
+              <p className="text-[11px] font-bold opacity-40 uppercase tracking-[0.2em] text-blue-400">Developed by Tasin Abrar</p>
+            </div>
          </div>
       </footer>
     </div>

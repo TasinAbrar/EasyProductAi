@@ -3,15 +3,15 @@ import { TranslationStrings } from './types';
 
 export const TRANSLATIONS: Record<'en' | 'bn', TranslationStrings> = {
   en: {
-    appTitle: "easyProduct AI",
+    appTitle: "easyProduct",
     heroTitle: "Professional Product Photos in Seconds",
-    heroSub: "Upload your product photos. Our AI renders 4 clean, studio-quality images from different angles instantly.",
+    heroSub: "Upload your product photos. Get 4 clean, studio-quality images from different angles instantly.",
     uploadFront: "Front View (Required)",
     uploadBack: "Back View (Optional)",
     uploadOptional: "Optional",
     uploadSub: "PNG, JPG supported",
     generateBtn: "Generate Studio Shots",
-    processingMsg: "AI is rendering your product in the studio...",
+    processingMsg: "Generating professional studio shots...",
     angleFront: "Front Hero Shot",
     anglePerspective: "Perspective Angle",
     angleSide: "Side Profile",
@@ -24,15 +24,15 @@ export const TRANSLATIONS: Record<'en' | 'bn', TranslationStrings> = {
     transparentLabel: "Transparent / Pure White"
   },
   bn: {
-    appTitle: "easyProduct AI",
+    appTitle: "easyProduct",
     heroTitle: "সেকেন্ডে প্রফেশনাল প্রোডাক্ট ফটো",
-    heroSub: "আপনার প্রোডাক্টের ছবি আপলোড করুন। আমাদের এআই ৪টি পরিষ্কার, স্টুডিও-কোয়ালিটি ছবি তৈরি করবে মুহূর্তেই।",
+    heroSub: "আপনার প্রোডাক্টের ছবি আপলোড করুন। ৪টি পরিষ্কার, স্টুডিও-কোয়ালিটি ছবি তৈরি হবে মুহূর্তেই।",
     uploadFront: "সামনের দৃশ্য (আবশ্যক)",
     uploadBack: "পেছনের দৃশ্য (ঐচ্ছিক)",
     uploadOptional: "ঐচ্ছিক",
     uploadSub: "PNG, JPG সাপোর্ট করে",
     generateBtn: "স্টুডিও শট তৈরি করুন",
-    processingMsg: "এআই আপনার প্রোডাক্টটি স্টুডিওতে রেন্ডার করছে...",
+    processingMsg: "প্রফেশনাল স্টুডিও শট তৈরি হচ্ছে...",
     angleFront: "সামনের হিরো শট",
     anglePerspective: "পার্সপেক্টিভ অ্যাঙ্গেল",
     angleSide: "সাইড প্রোফাইল",

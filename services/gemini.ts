@@ -49,7 +49,7 @@ export const renderProductAngle = async (
     if (part?.inlineData) {
       return `data:image/png;base64,${part.inlineData.data}`;
     }
-    throw new Error("No image data returned from AI");
+    throw new Error("No image data returned from studio engine");
   } catch (error) {
     // Re-throw the error so the UI can detect quota/auth issues
     throw error;

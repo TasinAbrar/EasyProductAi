@@ -1,6 +1,6 @@
 {
-  "name": "easyProduct AI",
-  "description": "Professional AI Product Image Maker. Turn a raw photo of any product into 4 high-end studio shots from different angles instantly.",
+  "name": "easyProduct",
+  "description": "Professional Product Image Maker. Turn a raw photo of any product into 4 high-end studio shots from different angles instantly.",
   "requestFramePermissions": [
     "camera",
     "microphone"
